@@ -1,4 +1,11 @@
 from typing import Annotated
+import uuid
+
+
+from motor.motor_asyncio import AsyncIOMotorClient
+
+from src.database import mongo
+from bson.binary import Binary
 
 from fastapi import APIRouter, Depends
 from fastapi.websockets import WebSocket
@@ -22,8 +29,6 @@ ws_router = APIRouter(
     prefix="/chat",
     tags=["WebSocket chat"],
 )
-
-
 @ws_router.websocket("/ws")
 async def websocket_chat(
     ws: WebSocket,
@@ -66,3 +71,40 @@ async def websocket_chat(
             # TODO: log this shit
             await ws_manager.disconnect(ws, user.id)
             break
+
+
+@ws_router.get("/messages/{match_id}")
+async def get_latest_messages(match_id):
+
+    collection = mongo.collection
+
+    match_id = str(match_id)
+
+    uuid_bytes = uuid.UUID(match_id).bytes
+    bin_data = Binary(uuid_bytes, subtype=3)
+    query = {"match_id": bin_data}
+    count = await collection.count_documents(query)
+    limit = min(count, 30)
+    sort = [("created_at", -1)]
+
+    result = []
+    for mess in await collection.find(query).limit(limit).sort(sort).to_list(length=limit):
+        result.append({
+
+            "_id": mess.get("_id"),
+            "match_id": mess.get("match_id"),
+            "from_id": mess.get("from_id"),
+            "to_id": mess.get("to_id"),
+            "text": mess.get("text"),
+            "reply_to": mess.get("reply_to"),
+            "group_id": mess.get("group_id"),
+            "media": mess.get("media"),
+            "created_at": mess.get("created_at"),
+            "updated_at": mess.get("updated_at"),
+            "status": mess.get("status"),
+
+
+
+        })
+
+    return result

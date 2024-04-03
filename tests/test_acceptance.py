@@ -2,6 +2,9 @@ import orjson
 from async_asgi_testclient import TestClient
 from dirty_equals import IsStr, IsUUID
 from fastapi import status
+from src.mongodb.mongodb import Mongo
+import uuid
+from bson.binary import Binary
 
 from src.chat.schemas import MessageStatus, WSAction, WSStatus
 from src.chat.utils import orjson_dumps
@@ -425,7 +428,7 @@ class TestAcceptance:
             "media": None,
         }
 
-        """Создание сообщений первым пользователем."""
+        """Создание сообщений вторым пользователем."""
 
         msg = {"match_id": created_match_id, "text": "Ok)))",
                "from_id": created_user_2_id, "to_id": created_user_1_id}
@@ -451,3 +454,43 @@ class TestAcceptance:
             "group_id": None,
             "media": None,
         }
+
+    async def test_get_latest_messages(self, mongo: Mongo, async_client: TestClient):
+        collection = mongo.collection
+
+        _id = uuid.uuid4()
+        match_id = uuid.uuid4()
+        from_id = uuid.uuid4()
+        to_id = uuid.uuid4()
+        text = "Hello, world!"
+
+        message = {
+            "_id": Binary(_id.bytes, subtype=3),
+            "match_id": Binary(match_id.bytes, subtype=3),
+            "from_id": Binary(from_id.bytes, subtype=3),
+            "to_id": Binary(to_id.bytes, subtype=3),
+            "text": text,
+            "created_at": '2023-01-01T00:00:00',
+            "updated_at": '2023-01-01T00:00:00',
+            "status": "sent"
+        }
+
+        collection.insert_one(message)
+
+        response = await async_client.get(f"/chat/messages/{match_id}")
+
+        assert response.status_code == 200
+
+        result = response.json()
+
+        assert len(result) == 1
+        assert result[0]["_id"] == str(_id)
+        assert result[0]["match_id"] == str(match_id)
+        assert result[0]["from_id"] == str(from_id)
+        assert result[0]["to_id"] == str(to_id)
+        assert result[0]["text"] == text
+        assert result[0]["created_at"] == message["created_at"]
+        assert result[0]["updated_at"] == message["updated_at"]
+        assert result[0]["status"] == message["status"]
+
+        collection.delete_one({'match_id': match_id})

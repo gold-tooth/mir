@@ -65,6 +65,6 @@ main_router.include_router(questionnaire_router)
 main_router.include_router(matches_router)
 
 # TODO: change to wss for production
-app.include_router(ws_router)
-
 app.include_router(main_router)
+
+app.include_router(ws_router)
