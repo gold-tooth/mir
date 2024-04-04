@@ -169,5 +169,4 @@ async def update_message(ws_msg: WSMessageRequest, ws: WebSocket, user: AuthUser
 
     await send_ws_message(ws, msg, WSAction.UPDATE)
 
-
 ws_manager = WebSocketConnectionManager()

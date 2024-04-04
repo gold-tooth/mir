@@ -1,12 +1,8 @@
-from typing import Annotated
 import uuid
+from typing import Annotated
+from uuid import UUID
 
-
-from motor.motor_asyncio import AsyncIOMotorClient
-
-from src.database import mongo
 from bson.binary import Binary
-
 from fastapi import APIRouter, Depends
 from fastapi.websockets import WebSocket
 from orjson import JSONEncodeError, orjson
@@ -24,6 +20,7 @@ from src.chat.utils import (
     update_message,
     ws_manager,
 )
+from src.database import mongo
 
 ws_router = APIRouter(
     prefix="/chat",
@@ -74,7 +71,7 @@ async def websocket_chat(
 
 
 @ws_router.get("/messages/{match_id}")
-async def get_latest_messages(match_id):
+async def get_latest_messages(match_id: UUID):
 
     collection = mongo.collection
 

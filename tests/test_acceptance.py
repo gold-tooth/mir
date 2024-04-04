@@ -1,13 +1,14 @@
+import uuid
+
 import orjson
 from async_asgi_testclient import TestClient
+from bson.binary import Binary
 from dirty_equals import IsStr, IsUUID
 from fastapi import status
-from src.mongodb.mongodb import Mongo
-import uuid
-from bson.binary import Binary
 
 from src.chat.schemas import MessageStatus, WSAction, WSStatus
 from src.chat.utils import orjson_dumps
+from src.mongodb.mongodb import Mongo
 
 
 class TestAcceptance:
@@ -470,9 +471,9 @@ class TestAcceptance:
             "from_id": Binary(from_id.bytes, subtype=3),
             "to_id": Binary(to_id.bytes, subtype=3),
             "text": text,
-            "created_at": '2023-01-01T00:00:00',
-            "updated_at": '2023-01-01T00:00:00',
-            "status": "sent"
+            "created_at": "2023-01-01T00:00:00",
+            "updated_at": "2023-01-01T00:00:00",
+            "status": "sent",
         }
 
         collection.insert_one(message)
@@ -493,4 +494,4 @@ class TestAcceptance:
         assert result[0]["updated_at"] == message["updated_at"]
         assert result[0]["status"] == message["status"]
 
-        collection.delete_one({'match_id': match_id})
+        collection.delete_one({"match_id": match_id})
