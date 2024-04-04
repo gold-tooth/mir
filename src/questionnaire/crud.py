@@ -69,7 +69,7 @@ async def create_questionnaire(
     today = date.today()
     min_age = today.replace(year=today.year - 18)
     max_age = today.replace(year=today.year - 82)
-    if questionnaire.birthday > min_age and questionnaire.birthday < max_age:
+    if questionnaire.birthday > min_age or questionnaire.birthday < max_age:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Возрастное ограничение строго c 18 лет!",
