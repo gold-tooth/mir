@@ -1,4 +1,3 @@
-import uuid
 from typing import Annotated
 from uuid import UUID
 
@@ -77,7 +76,7 @@ async def get_latest_messages(match_id: UUID):
 
     match_id = str(match_id)
 
-    uuid_bytes = uuid.UUID(match_id).bytes
+    uuid_bytes = UUID(match_id).bytes
     bin_data = Binary(uuid_bytes, subtype=3)
     query = {"match_id": bin_data}
     count = await collection.count_documents(query)
